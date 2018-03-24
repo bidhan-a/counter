@@ -50,6 +50,29 @@ func NewCounter(arg T) (Counter, error) {
 	return counter, nil
 }
 
+// Update updates the counter using another counter.
+func (counter Counter) Update(from Counter) {
+	for k, v := range from {
+		if _, ok := counter[k]; ok {
+			counter[k] += v
+		} else {
+			counter[k] = v
+		}
+	}
+}
+
+// Subtract subtracts counts in the counter using
+// counts from another counter.
+func (counter Counter) Subtract(from Counter) {
+	for k, v := range from {
+		if _, ok := counter[k]; ok {
+			counter[k] -= v
+		} else {
+			counter[k] = -v
+		}
+	}
+}
+
 func createMappingFromSlice(counter Counter, slice []T) {
 	for _, s := range slice {
 		if _, ok := counter[s]; ok {

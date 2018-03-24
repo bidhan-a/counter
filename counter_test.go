@@ -161,3 +161,106 @@ func TestNewCounterFromMap(t *testing.T) {
 		}
 	}
 }
+
+func TestCounterUpdate(t *testing.T) {
+	type expected struct {
+		key   interface{}
+		value int
+	}
+	tests := []struct {
+		to       interface{}
+		from     interface{}
+		expected []expected
+	}{
+		{
+			"abbcccddddeeeee",
+			[]string{"a", "b", "c"},
+			[]expected{
+				{"a", 2},
+				{"b", 3},
+				{"c", 4},
+				{"d", 4},
+				{"e", 5},
+			},
+		},
+		{
+			[]int{1, 3, 3, 5, 5, 5},
+			map[int]int{1: 2, 3: 1},
+			[]expected{
+				{1, 3},
+				{3, 3},
+				{5, 3},
+			},
+		},
+	}
+	for i, test := range tests {
+		toCounter, err := NewCounter(test.to)
+		if err != nil {
+			t.Fatalf("tests[%d]. failed with error %q", i, err)
+		}
+		fromCounter, err := NewCounter(test.from)
+		if err != nil {
+			t.Fatalf("tests[%d]. failed with error %q", i, err)
+		}
+
+		toCounter.Update(fromCounter)
+		for _, e := range test.expected {
+			if toCounter[e.key] != e.value {
+				t.Fatalf("tests[%d]. expected %d. got %d", i, e.value, toCounter[e.key])
+			}
+		}
+	}
+
+}
+
+func TestCounterSubtract(t *testing.T) {
+	type expected struct {
+		key   interface{}
+		value int
+	}
+	tests := []struct {
+		to       interface{}
+		from     interface{}
+		expected []expected
+	}{
+		{
+			"abbcccddddeeeee",
+			[]string{"a", "b", "c", "f", "f"},
+			[]expected{
+				{"a", 0},
+				{"b", 1},
+				{"c", 2},
+				{"d", 4},
+				{"e", 5},
+				{"f", -2},
+			},
+		},
+		{
+			[]int{1, 3, 3, 5, 5, 5},
+			map[int]int{1: 2, 3: 1},
+			[]expected{
+				{1, -1},
+				{3, 1},
+				{5, 3},
+			},
+		},
+	}
+	for i, test := range tests {
+		toCounter, err := NewCounter(test.to)
+		if err != nil {
+			t.Fatalf("tests[%d]. failed with error %q", i, err)
+		}
+		fromCounter, err := NewCounter(test.from)
+		if err != nil {
+			t.Fatalf("tests[%d]. failed with error %q", i, err)
+		}
+
+		toCounter.Subtract(fromCounter)
+		for _, e := range test.expected {
+			if toCounter[e.key] != e.value {
+				t.Fatalf("tests[%d]. expected %d. got %d", i, e.value, toCounter[e.key])
+			}
+		}
+	}
+
+}
