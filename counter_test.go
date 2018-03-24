@@ -4,18 +4,6 @@ import (
 	"testing"
 )
 
-func compareIntSlices(s1 []int, s2 []int) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
-	for i := 0; i < len(s1); i++ {
-		if s1[i] != s2[i] {
-			return false
-		}
-	}
-	return true
-}
-
 func TestNewCounterFromString(t *testing.T) {
 	type expected struct {
 		key   string
@@ -259,6 +247,49 @@ func TestCounterSubtract(t *testing.T) {
 		for _, e := range test.expected {
 			if toCounter[e.key] != e.value {
 				t.Fatalf("tests[%d]. expected %d. got %d", i, e.value, toCounter[e.key])
+			}
+		}
+	}
+
+}
+
+func TestCounterCopy(t *testing.T) {
+	type expected struct {
+		key   interface{}
+		value int
+	}
+
+	counter1, _ := NewCounter("abbcccddddeeeee")
+	counter2, _ := NewCounter([]int{1, 2, 2, 3, 3, 3})
+
+	tests := []struct {
+		counter  Counter
+		expected []expected
+	}{
+		{
+			counter1,
+			[]expected{
+				{"a", 1},
+				{"b", 2},
+				{"c", 3},
+				{"d", 4},
+				{"e", 5},
+			},
+		},
+		{
+			counter2,
+			[]expected{
+				{1, 1},
+				{2, 2},
+				{3, 3},
+			},
+		},
+	}
+	for i, test := range tests {
+		copy := test.counter.Copy()
+		for _, e := range test.expected {
+			if copy[e.key] != e.value {
+				t.Fatalf("tests[%d]. expected %d. got %d", i, e.value, copy[e.key])
 			}
 		}
 	}

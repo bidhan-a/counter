@@ -13,24 +13,23 @@ type T interface{}
 type Counter map[T]int
 
 // NewCounter creates a new counter.
-func NewCounter(arg T) (Counter, error) {
-	var counter Counter
+func NewCounter(arg T) (counter Counter, err error) {
 	value := reflect.ValueOf(arg)
 	switch value.Kind() {
 	case reflect.String:
 		substrings := strings.Split(value.String(), "")
 		if len(substrings) > 0 {
-			tSlice, err := toTSlice(substrings)
-			if err != nil {
-				return nil, err
+			tSlice, e := toTSlice(substrings)
+			if e != nil {
+				err = e
 			}
 			counter = make(Counter)
 			createMappingFromSlice(counter, tSlice)
 		}
 	case reflect.Slice:
-		tSlice, err := toTSlice(value.Interface())
+		tSlice, e := toTSlice(value.Interface())
 		if err != nil {
-			return nil, err
+			err = e
 		}
 		counter = make(Counter)
 		createMappingFromSlice(counter, tSlice)
@@ -38,16 +37,17 @@ func NewCounter(arg T) (Counter, error) {
 		// Only maps of type map[T]int are valid
 		elType := reflect.TypeOf(arg).Elem()
 		if elType.Kind() != reflect.Int {
-			return nil, fmt.Errorf("the map element must be of type 'int'")
+			err = fmt.Errorf("the map element must be of type 'int'")
 		}
-		tMap, err := toTMap(value.Interface())
-		if err != nil {
-			return nil, err
+		tMap, e := toTMap(value.Interface())
+		if e != nil {
+			err = e
 		}
 		counter = Counter(tMap)
+	default:
+		err = fmt.Errorf("unsupported argument")
 	}
-
-	return counter, nil
+	return
 }
 
 // Update updates the counter using another counter.
@@ -71,6 +71,15 @@ func (counter Counter) Subtract(from Counter) {
 			counter[k] = -v
 		}
 	}
+}
+
+// Copy creates a copy of the counter.
+func (counter Counter) Copy() Counter {
+	copy := make(Counter)
+	for k, v := range counter {
+		copy[k] = v
+	}
+	return copy
 }
 
 func createMappingFromSlice(counter Counter, slice []T) {
